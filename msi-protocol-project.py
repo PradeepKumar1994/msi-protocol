@@ -13,6 +13,8 @@ class Protocol:
     
     size_of_memory = 4
     
+    bus = ""
+    
     states = {
             "Modified": "M",
               "Shared": "S",
@@ -26,26 +28,22 @@ class Protocol:
     data_structure = [
         {"processor0": {
                 "cache_status": "I",
-                "shared": False,
-                "memory_block": "None"
+                "memory_block": {"W":None, "X":None, "Y": None, "Z":None}
                 }},
         
         {"processor1": {
                 "cache_status": "I",
-                "shared": False,
-                "memory_block": "None"
+                "memory_block": {"W":None, "X":None, "Y": None, "Z":None}
                 }},
                 
         {"processor2": {
                 "cache_status": "I",
-                "shared": False,
-                "memory_block": "None"
+                "memory_block": {"W":None, "X":None, "Y": None, "Z":None}
                 }},
                 
         {"processor3": {
                 "cache_status": "I",
-                "shared": False,
-                "memory_block": "None"
+                "memory_block": {"W":None, "X":None, "Y": None, "Z":None}
                 }}
         ]
     
@@ -55,98 +53,125 @@ class Protocol:
             
     arry = ['processor0', 'processor1', 'processor2', 'processor3']
     
+    #Method is used to show the user the values of Memory and Processors
+    def values(option):
+        
+        if(option == 'memory'):
+            
+            print("memory values are: ", [i for i in Protocol.memory])
+            
+        elif(option == 'processor'):
+            
+            print("procesor values are: ", [i for i in Protocol.arry])
+    
     def __init__(self, operator):
         
         self.operator = operator
         
+        Protocol.values('memory')
+
         if operator == 'read':
             
             read_memory_block = input("Enter memory block to read data from: ")
-            self.read(read_memory_block, func='read')
             
-        else:
+            while(True):
+                
+                if(read_memory_block not in Protocol.memory):
+
+                    print("Please refer to the values: ", Protocol.values('memory'))                    
+                    
+                    read_memory_block = input("Please re-enter memory block to read data from: ")
+                
+                else:
+                    
+                    break
+                
             
-            key = input("Enter the memory block key: ")
-            value = input("Value to be written in memory block: ")
-            self.write(key, value)
+            print("procesor values are: ", Protocol.arry)
+            
+            processor = input("Enter processor to read data from: ")
+            temp_bool = True
+            while(temp_bool):
+                
+                if(processor not in Protocol.arry):
+
+                    print("Please refer to the values: ", Protocol.values('processor'))
+                    
+                    processor = input("Please enter proper value of processor to read: ")
+                    
+                
+                else:
+                    temp_bool = False
+                    
+                    self.read(read_memory_block, processor)
+                    
+                    return None
+                    
+                
+        elif(operator == 'write'):
+            
+            processor = input("Enter the processor to write: ")
+            memory_block =  input("Enter the memory block for cache: ")
+            value = input("Enter value to be changed in {}: ".format(memory_block))
+            self.write(processor, memory_block, value)
+            
+        elif(operator == "status"):
+            
+            self.check_memory_status()
         
-    
-    def initial_state(self):
-        
-        return("All states are in invalid position since nothing in the memory\
-               to verify check memory status by running function check_memory_status")
-        
-        
+
     #------ READING FROM A MEMORY BLOCK -------
-    def read(self, read_memory_block, func = "read"):
+    def read(self, read_memory_block, processor):
         
-        #read_memory_block = 'W'
-        #the exception block will handle invalid memory read blocks
-        try:
+        if Protocol.data_structure[Protocol.arry.index(processor)][processor]['memory_block'][read_memory_block] == None:
             
-            Protocol.memory[read_memory_block]
+            Protocol.bus = 'Read Miss'
+            
+            Protocol.data_structure[Protocol.arry.index(processor)][processor]['memory_block'] = Protocol.memory
+            
+            Protocol.data_structure[Protocol.arry.index(processor)][processor]['cache_status'] = Protocol.states['Shared']
+            
+            print(Protocol.data_structure[Protocol.arry.index(processor)][processor])
+            
+            return Protocol.data_structure[Protocol.arry.index(processor)][processor]['memory_block']
         
-        except:
-            
-            print("Invalid memory location")
-            
-            return 1
-            
-        
-        #checking if any processor's cache has already read the block
-        for j in Protocol.arry:
-            
-            current_indexing_var = Protocol.data_structure[Protocol.arry.index(j)][j]['memory_block']
-            
-            if(current_indexing_var == read_memory_block):
-                
-                found_or_not_found = "Found"
-                
-                Protocol.print_status(Protocol.data_structure[Protocol.arry.index(j)][j], j)
-                
-                return("Found ")
-                
-            found_or_not_found = "Not Found"
-        
-        #if none found - processor's cache then look for any cache which is available
-        if(found_or_not_found == "Not Found"):
-            
-            for j in Protocol.arry:
-                
-                if(not Protocol.data_structure[Protocol.arry.index(j)][j]['shared']):
-                    
-                    Protocol.data_structure[Protocol.arry.index(j)][j]['shared'] = True
-                    
-                    if(func == 'read'):
-                        
-                        Protocol.data_structure[Protocol.arry.index(j)][j]['cache_status'] = 'S'
-                    
-                    else:
-                    
-                        Protocol.data_structure[Protocol.arry.index(j)][j]['cache_status'] = 'M'
-                    
-                    Protocol.data_structure[Protocol.arry.index(j)][j]['memory_block'] = read_memory_block
-                    
-                    print(Protocol.data_structure[Protocol.arry.index(j)])
-                    
-                    return("--------------------------------------------------")
-                
+        print(Protocol.data_structure[Protocol.arry.index(processor)][processor])
         return("No memory block exists")
             
-    def write(self, key, value):
+    def write(self, processor, memory_block, value):
         
-        Protocol.memory[key] = value
+        if(Protocol.data_structure[Protocol.arry.index(processor)][processor]['cache_status']) == 'I':
+            
+            #first write the data to cache block of processor
+            Protocol.data_structure[Protocol.arry.index(processor)][processor]['memory_block'] = Protocol.memory
+            
+            Protocol.data_structure[Protocol.arry.index(processor)][processor]['cache_status'] = Protocol.states['Modified']
+            
+            #changing the value of cache block based on user input
+            Protocol.data_structure[Protocol.arry.index(processor)][processor]['memory_block'][memory_block] = value
+            
+            j = 0
+            
+            for i in Protocol.data_structure:
+                temp_processor_value = Protocol.arry[j]
+                if(i[temp_processor_value]['cache_status'] == 'S'):
+                    Protocol.data_structure[j][temp_processor_value]['cache_status'] = 'I'
+                j = j + 1
+                
+            
         
-        print("For Key {} the value changed to: {}".format(key, value))
+        print("For Processor {} the value changed to: {}".format(processor, value))
         
-        self.read(key)
+        #self.read(key)
         
         return(' ')
         
         
     def check_memory_status(self):
         
-        pass
+        for i in Protocol.data_structure:
+            
+            print(i)
     
     
     
@@ -168,6 +193,13 @@ while(True):
     
         protocol = Protocol("write")
         instruction = input("Instruction: ")
+        
+    elif(instruction == 'check status'):
+        
+        
+        protocol = Protocol("status")
+        instruction = input("Instruction: ")
+        
         
     
     elif(instruction == 'exit'):
