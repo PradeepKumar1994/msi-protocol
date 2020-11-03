@@ -1,4 +1,4 @@
-# msi-protocol
+# MSI Protocol
 > According to the Wikipedia it's a basic cache-coherence protocol - operates in multiprocessor systems.
 
 ## Table of contents
